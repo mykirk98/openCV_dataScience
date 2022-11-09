@@ -142,7 +142,7 @@ void ConnectedComponentLabeling(_TP** seg, int height, int width, int** label, i
 			bw.at<unsigned char>(i, j) = (unsigned char)seg[i][j];
 	}
 	Mat labelImage(bw.size(), CV_32S);
-	*no_label = connectedComponents(bw, labelImage, 8); // 0ê¹Œì§€ í¬í•¨ëœ ê°¯ìˆ˜ì„
+	*no_label = connectedComponents(bw, labelImage, 8); // 0±îÁö Æ÷ÇÔµÈ °¹¼öÀÓ
 
 	(*no_label)--;
 
@@ -235,7 +235,7 @@ int EX0916_1()
 	return 0;
 }
 
-int EX0916_2(int** img, int height, int width)					//int height, width XXXXX int height, int width í•¨ìˆ˜ ë§¤ê°œë³€ìˆ˜ ì„ ì–¸ì€ ê°ê° íƒ€ì… ì´ë¦„ ìˆœìœ¼ë¡œ ì ì–´ì¤˜ì•¼í•¨
+int EX0916_2(int** img, int height, int width)					//int height, width XXXXX int height, int width ÇÔ¼ö ¸Å°³º¯¼ö ¼±¾ğÀº °¢°¢ Å¸ÀÔ ÀÌ¸§ ¼øÀ¸·Î Àû¾îÁà¾ßÇÔ
 {
 //	int height, width;
 //	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
@@ -329,11 +329,11 @@ int circle2()
 #define GetMin(x,y)	((x < y) ? x : y)
 #define Clipping(x) (GetMax(GetMin(x,255),0))
 
-void addValue2Image(int add_number,		//ë”í•  ê°’
-	int** img_input,		//ì…ë ¥ ì´ë¯¸ì§€
-	int height,		//ì˜ìƒ ë†’ì´
-	int width,		//ì˜ìƒ í­
-	int** img_output		//ì¶œë ¥ ì´ë¯¸ì§€
+void addValue2Image(int add_number,		//´õÇÒ °ª
+	int** img_input,		//ÀÔ·Â ÀÌ¹ÌÁö
+	int height,		//¿µ»ó ³ôÀÌ
+	int width,		//¿µ»ó Æø
+	int** img_output		//Ãâ·Â ÀÌ¹ÌÁö
 )
 {
 	for (int y = 0; y < height; y++)
@@ -353,10 +353,10 @@ void Image_Clipping(int** img_input, int height, int width, int** img_output)
 		{
 
 			img_output[y][x] = Clipping(img_input[y][x]);
-			/////////////////////ifë¬¸ì„ ì´ìš”í•œ í´ë¦¬í•‘ 2/////////////
+			/////////////////////if¹®À» ÀÌ¿äÇÑ Å¬¸®ÇÎ 2/////////////
 			//img_output[y][x] = GetMax(GetMin(img_input[y][x], 255), 0);
 			
-			/////////////////////ifë¬¸ì„ ì´ìš©í•œ í´ë¦¬í•‘ 1/////////////
+			/////////////////////if¹®À» ÀÌ¿ëÇÑ Å¬¸®ÇÎ 1/////////////
 			/*if (img_output[y][x] < 0)
 			{
 				img_output[y][x] = 0;
@@ -415,8 +415,8 @@ void EX0923_1()
 //		}
 //	}
 
-	ImageShow((char*)"ì¶œë ¥1ì˜ìƒë³´ê¸°", img, height, width);
-	ImageShow((char*)"ì¶œë ¥2ì˜ìƒë³´ê¸°", img, height, width);
+	ImageShow((char*)"Ãâ·Â1¿µ»óº¸±â", img, height, width);
+	ImageShow((char*)"Ãâ·Â2¿µ»óº¸±â", img, height, width);
 
 }
 
@@ -432,15 +432,15 @@ void EX0923_2()
 	addValue2Image(50, img, height, width, img_out1);
 	addValue2Image(-50, img, height, width, img_out2);
 
-	ImageShow((char*)"ì¶œë ¥1 ë°ê¸° + 50 í›„ ì˜ìƒë³´ê¸°", img_out1, height, width);
-	ImageShow((char*)"ì¶œë ¥2 ë°ê¸° - 50 í›„ ì˜ìƒë³´ê¸°", img_out2, height, width);
+	ImageShow((char*)"Ãâ·Â1 ¹à±â + 50 ÈÄ ¿µ»óº¸±â", img_out1, height, width);
+	ImageShow((char*)"Ãâ·Â2 ¹à±â - 50 ÈÄ ¿µ»óº¸±â", img_out2, height, width);
 	
 	Image_Clipping(img_out1, height, width, img_out1);
 	Image_Clipping(img_out2, height, width, img_out2);
 
-	ImageShow((char*)"ì…ë ¥ì˜ìƒë³´ê¸°", img, height, width);
-	ImageShow((char*)"ì¶œë ¥1 ë°ê¸° + 50 í›„ í´ë¦¬í•‘ í›„ ì˜ìƒë³´ê¸°", img_out1, height, width);
-	ImageShow((char*)"ì¶œë ¥2 ë°ê¸° - 50 í›„ í´ë¦¬í•‘ í›„ ì˜ìƒë³´ê¸°", img_out2, height, width);
+	ImageShow((char*)"ÀÔ·Â¿µ»óº¸±â", img, height, width);
+	ImageShow((char*)"Ãâ·Â1 ¹à±â + 50 ÈÄ Å¬¸®ÇÎ ÈÄ ¿µ»óº¸±â", img_out1, height, width);
+	ImageShow((char*)"Ãâ·Â2 ¹à±â - 50 ÈÄ Å¬¸®ÇÎ ÈÄ ¿µ»óº¸±â", img_out2, height, width);
 }
 
 
@@ -503,5 +503,5 @@ void EX0923_4(char* window_name1, char* window_name2, char* window_name3)
 
 void main()
 {
-	EX0923_4((char*)"ì§€ëŠ¥í˜•", (char*)"ì˜ìƒ", (char*)"ì²˜ë¦¬");
+	EX0923_4((char*)"Áö´ÉÇü", (char*)"¿µ»ó", (char*)"Ã³¸®");
 }
