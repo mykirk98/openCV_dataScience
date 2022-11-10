@@ -13,7 +13,6 @@ typedef struct {
 	int r, g, b;
 }int_rgb;
 
-
 int** IntAlloc2(int height, int width)
 {
 	int** tmp;
@@ -24,6 +23,23 @@ int** IntAlloc2(int height, int width)
 }
 
 void IntFree2(int** image, int height, int width)
+{
+	for (int i = 0; i < height; i++)
+		free(image[i]);
+
+	free(image);
+}
+
+float** FloatAlloc2(int height, int width)
+{
+	float** tmp;
+	tmp = (float**)calloc(height, sizeof(float*));
+	for (int i = 0; i < height; i++)
+		tmp[i] = (float*)calloc(width, sizeof(float));
+	return(tmp);
+}
+
+void FloatFree2(float** image, int height, int width)
 {
 	for (int i = 0; i < height; i++)
 		free(image[i]);
@@ -690,8 +706,194 @@ void AVERAGE_FILTER()
 	ImageShow((char*)"출력영상보기", img_out, height, width);
 }
 
+void Avg3x3(int** img, int height, int width, int** img_out)
+{
+	
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (x == 0 || (x == width - 1) || y == 0 || (y == height - 1))
+			{
+				img_out[y][x] = img[y][x];
+			}
+			else
+			{
+				int sum = 0;
+				for (int i = -1; i <= 1; i++)
+				{
+					for (int j = -1; j <= 1; j++)
+					{
+						sum += img[y + i][x + j];
+					}
+				}
+				img_out[y][x] = sum / 9.0 + 0.5;
+			}
+		}
+	}
+}
+
+void AvgNxN(int N, int** img, int height, int width, int** img_out)
+{
+	int delta = (N - 1) / 2;
+	
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			
+			
+			if (x <= delta || x >= width - delta || y <= delta || y >= height - delta)
+			{
+				img_out[y][x] = img[y][x];
+			}
+			else
+			{
+				int sum = 0;
+				for (int i = -delta; i <= delta; i++)
+				{
+					for (int j = -delta; j <= delta; j++)
+					{
+						sum += img[y + i][x + j];
+					}
+				}
+				img_out[y][x] = (float)sum / (N*N) + 0.5;
+			}
+		}
+	}
+}
+
+void AvgNxN_two(int N, int** img, int height, int width, int** img_out)
+{
+	int delta = (N - 1) / 2;
+	
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			
+			int sum = 0;
+			for (int i = -delta; i <= delta; i++)
+			{
+				for (int j = -delta; j <= delta; j++)
+				{
+					sum += img[GetMin(GetMax(y + i,0), height-1)][GetMin(GetMax(x + j,0),width-1)];
+				}
+			}
+			img_out[y][x] = (float)sum / (N * N) + 0.5;
+		}
+	}
+}
+
+void EX1021_4(int** img, int height, int width, int** img_out)
+{
+	float mask[3][3] = { {1 / 9.0, 1 / 9.0, 1 / 9.0}
+						, {1 / 9.0, 1 / 9.0, 1 / 9.0}
+						, {1 / 9.0, 1 / 9.0, 1 / 9.0} };
+	
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (x == 0 || (x == width - 1) || y == 0 || (y == height - 1))
+			{
+				img_out[y][x] = img[y][x];
+			}
+			else
+			{
+				int sum = 0;
+				float avg = 0.0;
+				for (int i = -1; i <= 1; i++)
+				{
+					for (int j = -1; j <= 1; j++)
+					{
+						avg += mask[i+1][j+1] * img[y + i][x + j];
+					}
+				}
+				img_out[y][x] = avg+ 0.5;
+			}
+		}
+	}
+}
+
+void AVG_3X3_MASK_2nd(float** mask, int** img, int height, int width, int** img_out)
+{
+
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (x == 0 || (x == width - 1) || y == 0 || (y == height - 1))
+			{
+				img_out[y][x] = img[y][x];
+			}
+			else
+			{
+				int sum = 0;
+				float avg = 0.0;
+				for (int i = -1; i <= 1; i++)
+				{
+					for (int j = -1; j <= 1; j++)
+					{
+						avg += mask[i + 1][j + 1] * img[y + i][x + j];
+					}
+				}
+				img_out[y][x] =Clipping(avg + 0.5);
+			}
+		}
+	}
+}
+
+void EX1021_5(float mask[3][3], int** img, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (x == 0 || (x == width - 1) || y == 0 || (y == height - 1))
+			{
+				img_out[y][x] = img[y][x];
+			}
+			else
+			{
+				int sum = 0;
+				float avg = 0.0;
+				for (int i = -1; i <= 1; i++)
+				{
+					for (int j = -1; j <= 1; j++)
+					{
+						avg += mask[i + 1][j + 1] * img[y + i][x + j];
+					}
+				}
+				img_out[y][x] = avg + 0.5;
+			}
+		}
+	}
+}
 
 void main()
 {
-	AVERAGE_FILTER();
+	int height, width;
+	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+	int** img_out333 = (int**)IntAlloc2(height, width);
+//	int** img_out555 = (int**)IntAlloc2(height, width);
+
+	float** mask = (float**)FloatAlloc2(3, 3);
+	
+	mask[0][0] = 0;		mask[0][1] = -1 / 4.0;		mask[0][2] = 0;
+	mask[1][0] = -1 / 4.0;		mask[1][1] = 2.0;		mask[1][2] = -1 / 4.0;
+	mask[2][0] = 0;		mask[2][1] = -1 / 4.0;		mask[2][2] = 0;
+	int N = 15;
+
+	
+//	Avg3x3(img, height, width, img_out333);
+//	AvgNxN_two(N, img, height, width, img_out);
+
+	AVG_3X3_MASK_2nd(mask, img, height, width, img_out);
+
+	ImageShow((char*)"입력영상보기", img, height, width);
+//	ImageShow((char*)"3X3 출력영상보기", img_out333, height, width);
+//	ImageShow((char*)"9X9출력영상보기", img_out555, height, width);
+	ImageShow((char*)"3X3 출력영상보기", img_out, height, width);
 }
