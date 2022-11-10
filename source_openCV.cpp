@@ -413,6 +413,17 @@ void C_Histogram(int** img_in, int height, int width, int* C_Hist)
 		C_Hist[cum] = C_Hist[cum - 1] + Hist[cum];
 	}
 }
+
+void Norm_C_Histogram(int** img_in, int height, int width, int* NC_Hist)
+{
+	int C_Hist[256] = { 0 };
+	C_Histogram(img_in, height, width, C_Hist);
+
+	for (int I = 0; I < 256; I++)
+	{
+		NC_Hist[I] = C_Hist[I] * (float)255 / (height * width);
+	}
+}
 void Histogram_MAIN()
 {
 	int height, width;
@@ -425,8 +436,181 @@ void Histogram_MAIN()
 
 	int C_Hist[256] = { 0 };
 	C_Histogram(img, height, width, C_Hist);
+	
+	int NC_Hist[256] = { 0 };
+	Norm_C_Histogram(img, height, width, NC_Hist);
 
 	ImageShow((char*)"입력영상보기", img, height, width);
 	DrawHistogram((char*)"히스토그램", Hist);
 	DrawHistogram((char*)"누적히스토그램", C_Hist);
+	DrawHistogram((char*)"정규화 누적히스토그램", NC_Hist);
+}
+
+void AVG_3X3(int** img_in, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (y == 0 || y == height - 1 || x == 0 || x == width - 1)
+			{
+				img_out[y][x] = img_in[y][x];
+			}
+			else
+			{
+				for (int i = -1; i <= 1; i++)
+				{
+					for (int j = -1; j <= 1; j++)
+					{
+						img_out[y][x] += img_in[y + i][x + j] / 9.0;
+					}
+				}
+				img_out[y][x] += 0.5;
+			}
+		}
+	}
+}
+
+void AVG_NXN(int N, int** img_in, int height, int width, int** img_out)
+{
+	int delta = (N - 1) / 2;
+
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (y <= delta || y >= height - delta || x <= delta || x >= width - delta)
+			{
+				img_out[y][x] = img_in[y][x];
+			}
+			else
+			{
+				for (int i = -delta; i <= delta; i++)
+				{
+					for (int j = -delta; j <= delta; j++)
+					{
+						img_out[y][x] += img_in[y + i][x + j] / (float)(N * N);
+					}
+				}
+				img_out[y][x] += 0.5;
+			}	
+		}
+	}
+}
+
+void AVG_NXN_TWO(int N, int** img_in, int height, int width, int** img_out)
+{
+	int delta = (N - 1) / 2;
+
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			for (int i = -delta; i <= delta; i++)
+			{
+				for (int j = -delta; j <= delta; j++)
+				{
+					img_out[y][x] += img_in[GetMin(GetMax(y + i, 0), height - 1)][GetMin(GetMax(x + j, 0), width - 1)] / (float)(N * N);
+				}
+			}
+			img_out[y][x] += 0.5;
+		}
+	}
+}
+
+void AVG_3X3_MASK(int** img_in, int height, int width, int** img_out)
+{
+	float mask[3][3] = { {1 / 9.0, 1 / 9.0, 1 / 9.0},
+						{1 / 9.0, 1 / 9.0, 1 / 9.0},
+						{1 / 9.0, 1 / 9.0, 1 / 9.0} };
+
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if ((y < (3 - 1) / 2) || (y >= height - (3 - 1) / 2) || (x < (3 - 1) / 2) || (x >= width - (3 - 1) / 2))
+			{
+				img_out[y][x] = img_in[y][x];
+			}
+			else
+			{
+				for (int i = -(3 - 1) / 2; i <= (3 - 1) / 2; i++)
+				{
+					for (int j = -(3 - 1) / 2; j <= (3 - 1) / 2; j++)
+					{
+						img_out[y][x] += img_in[y + i][x + j] * mask[i + 1][j + 1];
+					}
+				}
+				img_out[y][x] += 0.5;
+			}
+		}
+	}
+}
+
+void AVG_3X3_with_MASK_input(float** mask, int** img_in, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if ((y < (3 - 1) / 2) || (y >= height - (3 - 1) / 2) || (x < (3 - 1) / 2) || (x >= width - (3 - 1) / 2))
+			{
+				img_out[y][x] = img_in[y][x];
+			}
+			else
+			{
+				for (int i = -(3 - 1) / 2; i <= (3 - 1) / 2; i++)
+				{
+					for (int j = -(3 - 1) / 2; j <= (3 - 1) / 2; j++)
+					{
+						img_out[y][x] += img_in[y + i][x + j] * mask[i + 1][j + 1];
+					}
+				}
+				img_out[y][x] += 0.5;
+			}
+		}
+	}
+}
+
+void Filtering_MAIN()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+//	int** img_out_AVG_3X3 = (int**)IntAlloc2(height, width);
+//	int** img_out_AVG_NXN = (int**)IntAlloc2(height, width);
+	int** img_out_AVG_3X3_MASK = (int**)IntAlloc2(height, width);
+
+//	AVG_3X3(img, height, width, img_out1);
+//	AVG_NXN_TWO(9, img, height, width, img_out2);
+	AVG_3X3_MASK(img, height, width, img_out_AVG_3X3_MASK);
+
+	//float** mask = (float**)FloatAlloc2(3, 3);
+
+	//mask[0][0] = 0;
+	//mask[0][-1] = -1/4.0;
+	//mask[0][2] = 0;
+	//mask[1][0] = -1/4.0;
+	//mask[1][1] = 2.0;
+	//mask[1][2] = -1 / 4.0;
+	//mask[2][0] = 0;
+	//mask[2][1] = -1 / 4.0;
+	//mask[2][2] = 0;
+
+//	AVG_3X3_with_MASK_input(mask, img, height, width, img_out_AVG_3X3_MASK);
+	
+	ImageShow((char*)"입력영상보기", img, height, width);
+//	ImageShow((char*)"3X3출력영상보기", img_out_AVG_3X3, height, width);
+//	ImageShow((char*)"NXN출력영상보기", img_out_AVG_NXN, height, width);
+	ImageShow((char*)"NXN출력영상보기", img_out_AVG_3X3_MASK, height, width);
+}
+
+void main()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+
+	ImageShow((char*)"입력영상보기", img, height, width);
+	ImageShow((char*)"출력영상보기", img_out, height, width);
 }
