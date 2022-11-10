@@ -2,12 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <malloc.h>
-
 #include <opencv2/opencv.hpp>
 
 
 using namespace cv;
-
 
 typedef struct {
 	int r, g, b;
@@ -24,6 +22,24 @@ int** IntAlloc2(int height, int width)
 }
 
 void IntFree2(int** image, int height, int width)
+{
+	for (int i = 0; i < height; i++)
+		free(image[i]);
+
+	free(image);
+}
+
+
+float** FloatAlloc2(int height, int width)
+{
+	float** tmp;
+	tmp = (float**)calloc(height, sizeof(float*));
+	for (int i = 0; i < height; i++)
+		tmp[i] = (float*)calloc(width, sizeof(float));
+	return(tmp);
+}
+
+void FloatFree2(float** image, int height, int width)
 {
 	for (int i = 0; i < height; i++)
 		free(image[i]);
@@ -179,7 +195,7 @@ int BilinearInterpolation(int** image, int width, int height, double x, double y
 void DrawHistogram(char* comments, int* Hist)
 {
 	int histSize = 256; /// Establish the number of bins
-						// Draw the histograms for B, G and R
+	// Draw the histograms for B, G and R
 	int hist_w = 512; int hist_h = 512;
 	int bin_w = cvRound((double)hist_w / histSize);
 
@@ -206,340 +222,160 @@ void DrawHistogram(char* comments, int* Hist)
 
 }
 
-int EX0916_1()
+void Thresholding(int threshold, int** img, int height, int width, int** img_out)
 {
-	int height, width;
-	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
-	
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
 		{
-			if (img[y][x] >= 200)
+			if (img[y][x] >= threshold)
 			{
-				img[y][x] = 0;
+				img_out[y][x] = 255;
 			}
 			else
 			{
-				img[y][x] = 255;
+				img_out[y][x] = 0;
 			}
-			//img[y][x] = 255;
-			//printf("(%d, %d) ", y, x);
-			//printf("%d ", img[y][x]);
 		}
 	}
-	//printf("\n height = %d, width = %d", height, width);
-	
-	ImageShow((char*)"TEST", img, height, width);
-	
-	return 0;
 }
 
-int EX0916_2(int** img, int height, int width)					//int height, width XXXXX int height, int width 함수 매개변수 선언은 각각 타입 이름 순으로 적어줘야함
-{
-//	int height, width;
-//	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
-
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			if (img[y][x] >= 200)
-			{
-				img[y][x] = 0;
-			}
-			else
-			{
-				img[y][x] = 255;
-			}
-			//img[y][x] = 255;
-			//printf("(%d, %d) ", y, x);
-			//printf("%d ", img[y][x]);
-		}
-	}
-	//printf("\n height = %d, width = %d", height, width);
-
-	ImageShow((char*)"TEST", img, height, width);
-
-	return 0;
-}
-
-int EX0916_3()
-{
-	int height, width;
-	int** img0 = (int**)ReadImage((char*)"barbara.png", &height, &width);
-	int** img1 = (int**)ReadImage((char*)"lena.png", &height, &width);
-
-	EX0916_2(img1, height, width);
-
-	return 0;
-}
-
-int circle()
+void Threshold_MAIN()
 {
 	int height, width;
 	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
-	
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			if (((x - 256) * (x - 256) + (y - 256) * (y - 256)) <= 10000)
-			{
-				img[y][x] = 0;
-			}
-		}
-	}
-	ImageShow((char*)"TEST", img, height, width);
-	
-	return 0;
-}
-
-int circle2()
-{
-	int height, width;
-	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
-	
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			img[y][x] = 0;
-			if (((x - 200) * (x - 200) + (y - 256) * (y - 256)) <= 20000)
-			{
-				img[y][x] = 250;
-			}
-			if(((x - 300) * (x - 300) + (y - 256) * (y - 256)) <= 10000)
-			{
-				img[y][x] = 100;
-			}
-			if((((x - 200) * (x - 200) + (y - 256) * (y - 256)) <= 20000) && (((x - 300) * (x - 300) + (y - 256) * (y - 256)) <= 10000))
-			{
-				img[y][x] = 180;
-			}
-		}
-	}
-	
-	ImageShow((char*)"TEST", img, height, width);
-
-	return 0;
-}
-
-#define GetMax(x,y)	((x > y) ? x : y)
-#define GetMin(x,y)	((x < y) ? x : y)
-#define Clipping(x) (GetMax(GetMin(x,255),0))
-
-void addValue2Image(int add_number,		//더할 값
-	int** img_input,		//입력 이미지
-	int height,		//영상 높이
-	int width,		//영상 폭
-	int** img_output		//출력 이미지
-)
-{
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			img_output[y][x] = img_input[y][x] + add_number;
-		}
-	}
-}
-void Image_Clipping(int** img_input, int height, int width, int** img_output)
-{
-
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-
-			img_output[y][x] = Clipping(img_input[y][x]);
-			/////////////////////if문을 이요한 클리핑 2/////////////
-			//img_output[y][x] = GetMax(GetMin(img_input[y][x], 255), 0);
-			
-			/////////////////////if문을 이용한 클리핑 1/////////////
-			/*if (img_output[y][x] < 0)
-			{
-				img_output[y][x] = 0;
-			}
-			else if (img_output[y][x] > 255)
-			{
-				img_output[y][x] = 255;
-			}
-			else
-			{
-				img_output[y][x] = img_output[y][x];
-			}*/
-		}
-	}
-}
-void EX0923_1()
-{
-	int height, width;
-	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
-	int** img2 = (int**)ReadImage((char*)"barbara.png", &height, &width);
-	
-	int** img_out1 = (int**)IntAlloc2(height, width);
-	int** img_out2 = (int**)IntAlloc2(height, width);
-
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			img_out1[y][x] = img[y][x] + 50;
-			img_out2[y][x] = img[y][x] - 50;
-		}
-	}
-
-	addValue2Image(50, img, height, width, img_out1);
-	addValue2Image(-50, img, height, width, img_out1);
-
-//	for (int y = 0; y < height; y++)
-//	{
-//		for (int x = 0; x < width; x++)
-//		{
-//			img_out1[y][x] = img[y][x] + 50;
-////			img_out2[y][x] = img[y][x] - 50;
-//
-//			if (img_out1[y][x] < 0)
-//			{
-//				img_out1[y][x] = 0;
-//			}
-//			else if (img_out1[y][x] > 255)
-//			{
-//				img_out1[y][x] = 255;
-//			}
-//			else
-//			{
-//				img_out1[y][x] = img_out1[y][x];
-//			}
-//		}
-//	}
-
-	ImageShow((char*)"출력1영상보기", img, height, width);
-	ImageShow((char*)"출력2영상보기", img, height, width);
-
-}
-
-void EX0923_2()
-{
-	int height, width;
-	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
-
-	int** img_out1 = (int**)IntAlloc2(height, width);
-	int** img_out2 = (int**)IntAlloc2(height, width);
-
-
-	addValue2Image(50, img, height, width, img_out1);
-	addValue2Image(-50, img, height, width, img_out2);
-
-	ImageShow((char*)"출력1 밝기 + 50 후 영상보기", img_out1, height, width);
-	ImageShow((char*)"출력2 밝기 - 50 후 영상보기", img_out2, height, width);
-	
-	Image_Clipping(img_out1, height, width, img_out1);
-	Image_Clipping(img_out2, height, width, img_out2);
-
-	ImageShow((char*)"입력영상보기", img, height, width);
-	ImageShow((char*)"출력1 밝기 + 50 후 클리핑 후 영상보기", img_out1, height, width);
-	ImageShow((char*)"출력2 밝기 - 50 후 클리핑 후 영상보기", img_out2, height, width);
-}
-
-void EX0923_3()
-{
-	int height, width;
-	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
-
-	int** img_out1 = (int**)IntAlloc2(height, width);
-	int** img_out2 = (int**)IntAlloc2(height, width);
-
-	int maxvalue = GetMax(3, 2);
-	int minvalue = GetMin(3, 2);
-
-	int a = 300;
-	int b = -10;
-	int c = 200;
-
-	a =GetMax(GetMin(a, 255), 0);
-	b = GetMax(GetMin(b, 255), 0);
-	c = GetMax(GetMin(c, 255), 0);
-
-	printf("%d %d %d\n", a, b, c);
-}
-
-void ImageMixing(float alpha, int** img_input1, int** img_input2, int height, int width, int** img_output)
-{
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			img_output[y][x] = alpha * img_input1[y][x] + (1.0 - alpha) * img_input2[y][x];
-		}
-	}
-}
-
-void EX0923_4(char* window_name1, char* window_name2, char* window_name3)
-{
-	int height, width;
-	int** img1 = (int**)ReadImage((char*)"barbara.png", &height, &width);
-	int** img2 = (int**)ReadImage((char*)"lena.png", &height, &width);
-
 	int** img_out = (int**)IntAlloc2(height, width);
 
+	int threshold = 128;
+
+	Thresholding(threshold, img, height, width, img_out);
+
+	ImageShow((char*)"입력영상보기", img, height, width);
+	ImageShow((char*)"출력영상보기", img_out, height, width);
+}
+
+#define GetMax(x,y) ((x>y)?x:y)
+#define GetMin(x,y) ((x<y)?x:y)
+#define Clipping(x) (GetMax(GetMin(x,255),0))
+
+void AddValue2Image(int value, int** img_in, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			img_out[y][x] = img_in[y][x] + value;
+		}
+	}
+}
+
+void ImageClpping(int** img_in, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (img_in[y][x] > 255)
+			{
+				img_out[y][x] = 255;
+			}
+			else if (img_in[y][x] < 0)
+			{
+				img_out[y][x] = 0;
+			}
+			else
+				img_out[y][x] = img_in[y][x];
+		}
+	}
+}
+
+void Clipping_MAIN()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+	int** img_out1 = (int**)IntAlloc2(height, width);
+	int** img_out2 = (int**)IntAlloc2(height, width);
+	
+	AddValue2Image(50, img, height, width, img_out1);
+	AddValue2Image(-50, img, height, width, img_out2);
+
+	ImageShow((char*)"입력영상보기", img, height, width);
+	ImageShow((char*)"픽셀값+50출력영상1보기", img_out1, height, width);
+	ImageShow((char*)"픽셀값-50출력영상2보기", img_out2, height, width);
+
+	ImageClpping(img_out1, height, width, img_out1);
+	ImageClpping(img_out2, height, width, img_out2);
+
+	
+	ImageShow((char*)"CLIPPING출력영상1보기", img_out1, height, width);
+	ImageShow((char*)"CLIPPING출력영상2보기", img_out2, height, width);
+}
+
+void ImageMixing(float alpha,int** img_in1, int** img_in2, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			img_out[y][x] = alpha * img_in1[y][x] + (1 - alpha) * img_in2[y][x];
+		}
+	}
+}
+void ImageMixing_MAIN()
+{
+	int height, width;
+
+	int** img1 = (int**)ReadImage((char*)"barbara.png", &height, &width);
+	int** img2 = (int**)ReadImage((char*)"lena.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+	
 	float alpha = 0.5;
 
 	ImageMixing(alpha, img1, img2, height, width, img_out);
-	//for (int y = 0; y < height; y++)
-	//{
-	//	for (int x = 0; x < width; x++)
-	//	{
-	//		img_out[y][x] = alpha * img1[y][x] + (1.0 - alpha) * img2[y][x];
-	//	}
-	//}
 
-	ImageShow(window_name1, img1, height, width);
-	ImageShow(window_name2, img2, height, width);
-	ImageShow(window_name3, img_out, height, width);
+	ImageShow((char*)"입력영상보기", img1, height, width);
+	ImageShow((char*)"출력영상보기", img_out, height, width);
 }
 
 #define RoundUp(x) ((int)(x+0.5))
-
-void Stretching_1(int height, int width, int** img_input, int** img_output, int a, int b, int c, int d)
+void ImageStretch(int a, int b, int c, int d, int** img_in, int height, int width, int** img_out)
 {
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
 		{
-			if (0 < img_input[y][x] && img_input[y][x] <= a)
+			if (0 <= img_in[y][x] && img_in[y][x] < a)
 			{
-				img_output[y][x] = RoundUp((float)c / a * img_input[y][x]);
+				img_out[y][x] = RoundUp((float)c / a * img_in[y][x]);
 			}
-			else if(a < img_input[y][x] && img_input[y][x] <= b)
+			if (a <= img_in[y][x] && img_in[y][x] < b)
 			{
-				img_output[y][x] = RoundUp(((float)d - c) / (b - a) * (img_input[y][x] - a) + c);
+				img_out[y][x] = RoundUp((float)(d - c) / (b - a) * (img_in[y][x] - a) + c);
 			}
-			else
+			if (b <= img_in[y][x] && img_in[y][x] < 255)
 			{
-				img_output[y][x] = RoundUp((float)(255 - d) / (255 - b) * (img_input[y][x] - b) + d);
+				img_out[y][x] = RoundUp((float) (255 - d) / (255 - b) * (img_in[y][x] - b) + d);
 			}
 		}
 	}
 }
 
-void EX0930_1()
+void ImageStretch_MAIN()
 {
 	int height, width;
+
 	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
 	int** img_out = (int**)IntAlloc2(height, width);
 
-	int a = 100, b = 150, c = 50, d = 200;
+	int a = 100, b = 200, c = 100, d = 150;
+	ImageStretch(a, b, c, d, img, height, width, img_out);
 
-	Stretching_1(height, width, img, img_out, a, b, c, d);
-	
 	ImageShow((char*)"입력영상보기", img, height, width);
 	ImageShow((char*)"출력영상보기", img_out, height, width);
-
 }
 
-void GetHistogram_1(int height, int width, int** img, int* Hist)
+void Histogram(int** img_in, int height, int width, int* Hist)
 {
 	for (int brightness = 0; brightness < 256; brightness++)
 	{
@@ -547,7 +383,7 @@ void GetHistogram_1(int height, int width, int** img, int* Hist)
 		{
 			for (int x = 0; x < width; x++)
 			{
-				if (img[y][x] == brightness)
+				if (img_in[y][x] == brightness)
 				{
 					Hist[brightness]++;
 				}
@@ -556,31 +392,41 @@ void GetHistogram_1(int height, int width, int** img, int* Hist)
 	}
 }
 
-void GetHistogram_2(int height, int width, int** img, int* Hist)
+void Histogram2(int** img_in, int height, int width, int* Hist)
 {
-		for (int y = 0; y < height; y++)
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
 		{
-			for (int x = 0; x < width; x++)
-			{
-				Hist[img[y][x]]++;
-			}
+			Hist[img_in[y][x]]++;
 		}
+	}
 }
-void EX0930_2()
+void C_Histogram(int** img_in, int height, int width, int* C_Hist)
+{
+	int Hist[256] = { 0 };
+	C_Hist[0] = Hist[0];
+	Histogram(img_in, height, width, Hist);
+
+	for (int cum = 0; cum < 256; cum++)
+	{
+		C_Hist[cum] = C_Hist[cum - 1] + Hist[cum];
+	}
+}
+void Histogram_MAIN()
 {
 	int height, width;
-	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
-	int count = 0;
+
+	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
 
 	int Hist[256] = { 0 };
+	Histogram(img, height, width, Hist);
 
-	GetHistogram_1(height, width, img, Hist);
+	int C_Hist[256] = { 0 };
+	C_Histogram(img, height, width, C_Hist);
 
 	ImageShow((char*)"입력영상보기", img, height, width);
-	DrawHistogram((char*)"히스토그램" , Hist);		// histogram을 그려주는 함수
-}
-
-void main()
-{
-	EX0930_2();
+	DrawHistogram((char*)"히스토그램", Hist);
+	DrawHistogram((char*)"누적히스토그램", C_Hist);
 }
