@@ -443,7 +443,6 @@ void EX0923_2()
 	ImageShow((char*)"출력2 밝기 - 50 후 클리핑 후 영상보기", img_out2, height, width);
 }
 
-
 void EX0923_3()
 {
 	int height, width;
@@ -501,7 +500,87 @@ void EX0923_4(char* window_name1, char* window_name2, char* window_name3)
 	ImageShow(window_name3, img_out, height, width);
 }
 
+#define RoundUp(x) ((int)(x+0.5))
+
+void Stretching_1(int height, int width, int** img_input, int** img_output, int a, int b, int c, int d)
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (0 < img_input[y][x] && img_input[y][x] <= a)
+			{
+				img_output[y][x] = RoundUp((float)c / a * img_input[y][x]);
+			}
+			else if(a < img_input[y][x] && img_input[y][x] <= b)
+			{
+				img_output[y][x] = RoundUp(((float)d - c) / (b - a) * (img_input[y][x] - a) + c);
+			}
+			else
+			{
+				img_output[y][x] = RoundUp((float)(255 - d) / (255 - b) * (img_input[y][x] - b) + d);
+			}
+		}
+	}
+}
+
+void EX0930_1()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+
+	int a = 100, b = 150, c = 50, d = 200;
+
+	Stretching_1(height, width, img, img_out, a, b, c, d);
+	
+	ImageShow((char*)"입력영상보기", img, height, width);
+	ImageShow((char*)"출력영상보기", img_out, height, width);
+
+}
+
+void GetHistogram_1(int height, int width, int** img, int* Hist)
+{
+	for (int brightness = 0; brightness < 256; brightness++)
+	{
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				if (img[y][x] == brightness)
+				{
+					Hist[brightness]++;
+				}
+			}
+		}
+	}
+}
+
+void GetHistogram_2(int height, int width, int** img, int* Hist)
+{
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				Hist[img[y][x]]++;
+			}
+		}
+}
+void EX0930_2()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
+	int count = 0;
+
+	int Hist[256] = { 0 };
+
+	GetHistogram_1(height, width, img, Hist);
+
+	ImageShow((char*)"입력영상보기", img, height, width);
+	DrawHistogram((char*)"히스토그램" , Hist);		// histogram을 그려주는 함수
+}
+
 void main()
 {
-	EX0923_4((char*)"지능형", (char*)"영상", (char*)"처리");
+	EX0930_2();
 }
