@@ -580,7 +580,118 @@ void EX0930_2()
 	DrawHistogram((char*)"히스토그램" , Hist);		// histogram을 그려주는 함수
 }
 
+void C_Histogram(int** img, int height, int width, int* C_Hist)
+{
+	int Hist[256] = { 0 };
+	GetHistogram_1(height, width, img, Hist);
+	C_Hist[0] = Hist[0];
+
+	for (int n = 1; n < 256; n++)
+	{
+		C_Hist[n] = Hist[n] + C_Hist[n - 1];
+	}
+}
+
+void norm_C_Histogram(int** img, int height, int width, int* NC_Hist)
+{
+	
+	int C_Hist[256] = { 0 };
+	C_Histogram(img, height, width, C_Hist);
+
+
+	for (int n = 0; n < 256; n++)
+	{
+		NC_Hist[n] = C_Hist[n] * 255 / (width * height);
+		//NC_Hist[n] = (float)C_Hist[n] * (width * height) / 255;
+	}
+
+}
+	
+void EX1014_1()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+
+	int C_Hist[256] = {0};
+	C_Histogram(img, height, width, C_Hist);
+	
+	int Hist[256] = { 0 };
+	
+	ImageShow((char*)"입력영상보기", img, height, width);
+	DrawHistogram((char*)"히스토그램", C_Hist);		// histogram을 그려주는 함수
+
+}
+
+void EX1014_2()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+
+	int NC_Hist[256] = { 0 };
+	norm_C_Histogram(img, height, width, NC_Hist);
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			img_out[y][x] = NC_Hist[img[y][x]];
+		}
+	}
+
+	ImageShow((char*)"입력영상보기", img, height, width);
+	DrawHistogram((char*)"누적히스토그램", NC_Hist);		// norm_C_Histogram을 그려주는 함수
+}
+
+void HistogramEqualization(int** img, int height, int width, int** img_out)
+{
+	int NC_Hist[256] = { 0 };
+
+	norm_C_Histogram(img, height, width, NC_Hist);
+
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			img_out[y][x] = NC_Hist[img[y][x]];
+		}
+	}
+}
+
+void EX1014_3()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"lenax0.5.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+	
+	int NC_Hist[256] = { 0 };
+	HistogramEqualization(img, height, width, img_out);
+	norm_C_Histogram(img, height, width, NC_Hist);
+
+	ImageShow((char*)"입력영상보기", img, height, width);
+	ImageShow((char*)"출력영상보기", img_out, height, width);
+	DrawHistogram((char*)"누적히스토그램", NC_Hist);		// norm_C_Histogram을 그려주는 함수
+}
+
+void AVERAGE_FILTER()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+
+	for (int y = 1; y < height - 1; y++)
+	{
+		for (int x = 1; x < width - 1; x++)
+		{
+			img_out[y][x] = (img[y - 1][x - 1] + img[y - 1][x] + img[y - 1][x + 1] + img[y][x - 1] + img[y][x] + img[y][x + 1] + img[y + 1][x - 1] + img[y + 1][x] + img[y + 1][x + 1]) / 9;
+		}
+	}
+	ImageShow((char*)"입력영상보기", img, height, width);
+	ImageShow((char*)"출력영상보기", img_out, height, width);
+}
+
+
 void main()
 {
-	EX0930_2();
+	AVERAGE_FILTER();
 }
