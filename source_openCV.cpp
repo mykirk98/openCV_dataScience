@@ -871,7 +871,7 @@ void EX1021_5(float mask[3][3], int** img, int height, int width, int** img_out)
 	}
 }
 
-void main()
+void main_1021()
 {
 	int height, width;
 	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
@@ -896,4 +896,97 @@ void main()
 //	ImageShow((char*)"3X3 출력영상보기", img_out333, height, width);
 //	ImageShow((char*)"9X9출력영상보기", img_out555, height, width);
 	ImageShow((char*)"3X3 출력영상보기", img_out, height, width);
+}
+
+void MagGradient_X(int** img, int height, int width, int** img_out)
+{
+	for (int i = 0; i < height - 1; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			img_out[i][j] = abs(img[i + 1][j] - img[i][j]);
+		}
+	}
+}
+
+void MagGradient_Y(int** img, int height, int width, int** img_out)
+{
+	for(int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width - 1; j++)
+		{
+			img_out[i][j] = abs(img[i][j + 1] - img[i][j]);
+		}
+	}
+}
+
+void MagGradient(int** img, int height, int width, int** img_out)
+{
+	for (int i = 0; i < height - 1; i++)
+	{
+		for (int j = 0; j < width - 1; j++)
+		{
+			img_out[i][j] = abs(img[i + 1][j] - img[i][j]) + abs(img[i][j + 1] - img[i][j]);
+		}
+	}
+}
+
+int FindMaxValue(int** img, int height, int width)
+{
+//	img[0][0] = 0;
+	int max_value = img[0][0];
+
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			max_value = GetMax(max_value, img[i][j]);
+		}
+	}
+
+	return (max_value);		//출력할 값이 하나일 경우 리턴값, 여러개이면 파라미터로
+}
+
+void NormalizeByMax(int** img, int height, int width, int** img_out)
+{
+	int max_value = FindMaxValue(img, height, width);
+	
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			img_out[i][j] = (float)img[i][j] / max_value * 255;
+		}
+	}
+}
+
+
+void main()
+{
+	int height, width;
+	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
+	int** img_out = (int**)IntAlloc2(height, width);
+	int** img_out_X = (int**)IntAlloc2(height, width);
+	int** img_out_Y = (int**)IntAlloc2(height, width);
+	int** img_out_XY = (int**)IntAlloc2(height, width);
+	int** img_out_NBM = (int**)IntAlloc2(height, width);
+	
+	MagGradient_X(img, height, width, img_out_X);
+	MagGradient_Y(img, height, width, img_out_Y);
+	MagGradient(img, height, width, img_out_XY);
+
+	int max_value_main = FindMaxValue(img_out_XY, height, width);
+	
+	NormalizeByMax(img_out_XY, height, width, img_out_NBM);
+
+
+
+
+	ImageShow((char*)"입력영상보기", img, height, width);
+	ImageShow((char*)"출력영상보기_MagGradient_X", img_out_X, height, width);
+	ImageShow((char*)"출력영상보기_MagGradient_Y", img_out_Y, height, width);
+	ImageShow((char*)"출력영상보기_MagGradient_XY", img_out_XY, height, width);
+	ImageShow((char*)"출력영상보기_MagGradient_NBM", img_out_NBM, height, width);
+
+	printf("\n\n\n\n\n\n\n max = %d\n\n\n\n\n\n\n", max_value_main);
 }
