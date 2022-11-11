@@ -605,12 +605,84 @@ void Filtering_MAIN()
 	ImageShow((char*)"NXN출력영상보기", img_out_AVG_3X3_MASK, height, width);
 }
 
+void MagGradient_X(int** img_in, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width - 1; x++)
+		{
+			img_out[y][x] = abs(img_in[y][x + 1] - img_in[y][x]);
+		}
+	}
+}
+
+void MagGradient_Y(int** img_in, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height - 1; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			img_out[y][x] = abs(img_in[y + 1][x] - img_in[y][x]);
+		}
+	}
+}
+
+void MagGradient_XY(int** img_in, int height, int width, int** img_out)
+{
+	for (int y = 0; y < height - 1; y++)
+	{
+		for (int x = 0; x < width - 1; x++)
+		{
+			img_out[y][x] = abs(img_in[y][x + 1] - img_in[y][x]) + abs(img_in[y + 1][x] - img_in[y][x]);
+		}
+	}
+}
+
+int FindMaxValue(int** img_in, int height, int width)
+{
+	int max_value = img_in[0][0];
+
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			max_value = GetMax(max_value, img_in[y][x]);
+		}
+	}
+
+	return max_value;
+}
+
+void NormalizeByMax(int** img_in, int height, int width, int** img_out)
+{
+	int max_value = FindMaxValue(img_in, height, width);
+
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			img_out[y][x] = (float)img_in[y][x] / max_value * 255;
+		}
+	}
+}
+
 void main()
 {
 	int height, width;
-	int** img = (int**)ReadImage((char*)"barbara.png", &height, &width);
-	int** img_out = (int**)IntAlloc2(height, width);
+	int** img = (int**)ReadImage((char*)"lena.png", &height, &width);
+//	int** img_out_MagGradient_X = (int**)IntAlloc2(height, width);
+//	int** img_out_MagGradient_Y = (int**)IntAlloc2(height, width);
+	int** img_out_MagGradient_XY = (int**)IntAlloc2(height, width);
+	int** img_out_NormalizeByMax = (int**)IntAlloc2(height, width);
+
+//	MagGradient_X(img, height, width, img_out_MagGradient_X);
+//	MagGradient_Y(img, height, width, img_out_MagGradient_Y);
+	MagGradient_XY(img, height, width, img_out_MagGradient_XY);
+	NormalizeByMax(img_out_MagGradient_XY, height, width, img_out_NormalizeByMax);
 
 	ImageShow((char*)"입력영상보기", img, height, width);
-	ImageShow((char*)"출력영상보기", img_out, height, width);
+//	ImageShow((char*)"MagGradinet_X출력영상보기", img_out_MagGradient_X, height, width);
+//	ImageShow((char*)"MagGradinet_Y출력영상보기", img_out_MagGradient_Y, height, width);
+	ImageShow((char*)"MagGradinet_XY출력영상보기", img_out_MagGradient_XY, height, width);
+	ImageShow((char*)"MagGradinet_NBM출력영상보기", img_out_NormalizeByMax, height, width);
 }
